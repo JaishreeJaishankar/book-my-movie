@@ -1,4 +1,4 @@
-import React,{Fragment, useState} from 'react';
+import React,{useState} from 'react';
 import Modal from 'react-modal';
 import {Link} from 'react-router-dom';
 import PropTypes from 'prop-types';
@@ -11,47 +11,9 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Input from '@material-ui/core/Input';
 import FormHelperText from '@material-ui/core/FormHelperText';
-import {ValidatorForm,TextValidator} from 'react-material-ui-form-validator'
 
 import './Header.css';
 import logo from "../../assets/logo.svg"
-
-
-// const Header = () =>{
-//     return (
-//         <Fragment>
-//             <div className="header">
-//                 <div className="logoPosition">
-//                     <img src={logo} className="logo" alt="logo"></img>
-//                 </div>
-//                 <div className="headerButtonPosition">
-//                     <Button className="headerButton" variant="contained" style={{ marginLeft: "10px" }} color="primary" name="bookShow">
-//                         Book Show
-//                     </Button>
-//                     <Button className="headerButton" variant="contained" style={{ marginLeft: "10px"}} name="login">
-//                         Login
-//                     </Button>
-                    
-//                 </div>
-//             </div>
-//         </Fragment>
-//     );
-// };
-
-// export default Header;
-
-
-
-const customStyles = {
-    content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        marginRight: '-50%',
-        transform: 'translate(-50%, -50%)'
-    }
-};
 
 
 const TabContainer = function (props) {
@@ -62,74 +24,62 @@ const TabContainer = function (props) {
     )
 }
 
-
-
 TabContainer.propTypes = {
     children: PropTypes.node.isRequired
 }
 
 
-const Header = ( props ) => {
+const Header = (props) => {
+    
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [value, setValue] = useState(0);
     const [loginForm,setLoginForm] = useState({
         username:"",
-        password:""
+        loginpassword:""
     });
     const [registerForm,setRegisterForm] = useState({
         firstname:"",
         lastname:"",
         email:"",
-        password:"",
+        registerpassword:"",
         contact:""
     });
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     const [loggedIn, setLoggedIn] = useState(sessionStorage.getItem("access-token")== null ? false : true);
-    const [loginApiError, setLoginApiError] = useState("");
    
-
-
     const openModalHandler = () => {
-        
         setModalIsOpen(true);
         setValue(0);
-        setLoginForm({username:"",password:""});
+        setLoginForm({username:"",loginpassword:""});
         setRegisterForm({
                             firstname:"",
                             lastname:"",
                             email:"",
-                            password:"",
+                            registerpassword:"",
                             contact:""
                         })  
     }
 
-
    const closeModalHandler = () => {
         setModalIsOpen(false);
     }
-
   
     const tabChangeHandler = (event, value) => {
-        setValue(value);
-      
+        setValue(value); 
     }
 
-
     const  loginClickHandler = () => {
-        console.log(loginForm.username, loginForm.password);
+        console.log(loginForm.username, loginForm.loginpassword);
+        if(loginForm.username === "" || loginForm.loginpassword === "") return;     
 
-        setLoginApiError("");
-        if(loginForm.username === "" || loginForm.password === "") return;     
-
-    
         let dataLogin = null;
+        console.log(props.baseUrl);
         fetch(props.baseUrl + "auth/login",{
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Cache-Control": "no-cache",
-                Authorization: "Basic " + window.btoa(loginForm.username + ":" + loginForm.password)
-
+                Authorization: "Basic " + window.btoa(loginForm.username + ":" + loginForm.loginpassword)
             },
             body: dataLogin,
         })
@@ -139,9 +89,7 @@ const Header = ( props ) => {
                  return response.json();
         } else{
             let error = await response.json();
-            setLoginApiError(error.message);
-            throw new Error("Something Went Wrong");
-
+            throw new Error("Something Went Wrong"+error);
         }
         })
         .then((data) => {
@@ -157,50 +105,39 @@ const Header = ( props ) => {
     const loginInputChangedHandler = (e) => {
         const state = loginForm;
         state[e.target.id] = e.target.value;
-
         setLoginForm({...state})
     }
 
     const registerInputChangedHandler = (e) => {
         const state = registerForm;
-        console.log(e.target.name);
         console.log(e.target.id);
-
         state[e.target.id] = e.target.value;
         console.log(state);
         setRegisterForm({...state})
     }
     
-
     const  registerClickHandler = () => {
-
-
         let dataRegistered = JSON.stringify({
             email_address: registerForm.email,
             first_name: registerForm.firstname,
             last_name: registerForm.lastname,
             mobile_number:registerForm.contact,
-            password: registerForm.password
+            password: registerForm.registerpassword
         });
-        console.log(dataRegistered);
         fetch(props.baseUrl + "signup",{
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Cache-Control": "no-cache",
-                Authorization: "Basic" + window.btoa(loginForm.username + ":" + loginForm.password)
-
+                Authorization: "Basic" + window.btoa(loginForm.username + ":" + loginForm.loginpassword)
             },
             body: dataRegistered,
         }).then((data) => {setRegistrationSuccess(true)});
-
-
     }
 
     const logoutHandler = (e) => {
         sessionStorage.removeItem("uuid");
         sessionStorage.removeItem("access-token");
-        console.log(' reached here');
         setLoggedIn(false);
     }
 
@@ -208,7 +145,7 @@ const Header = ( props ) => {
     return (
         <div>
             <header className="header">
-                <img src={logo} className="logo" alt="Movies App Logo" />
+                <img src={logo} className="logo" alt="Logo" />
                 {!loggedIn ?
                     <div className="headerButton">
                         <Button variant="contained" color="default" onClick={openModalHandler}>
@@ -223,16 +160,15 @@ const Header = ( props ) => {
                     </div>
                 }
                 {props.showBookShowButton === "true" && !loggedIn
-                    ? <div className="bookshow-button">
+                    ? <div className="bookshow-button headerButton">
                         <Button variant="contained" color="primary" onClick={openModalHandler}>
                             Book Show
                         </Button>
                     </div>
                     : ""
                 }
-
                 {props.showBookShowButton === "true" && loggedIn
-                    ? <div className="bookshow-button">
+                    ? <div className="bookshow-button headerButton">
                         <Link to={"/bookshow/" + props.id}>
                             <Button variant="contained" color="primary">
                                 Book Show
@@ -241,15 +177,23 @@ const Header = ( props ) => {
                     </div>
                     : ""
                 }
-
             </header>
+            
             <Modal
-                ariaHideApp={false}
                 isOpen={modalIsOpen}
+                ariaHideApp={false}
                 contentLabel="Login"
                 onRequestClose={closeModalHandler}
-                style={customStyles}
-            >
+                style={{
+                    content: {
+                        top: '50%',
+                        left: '50%',
+                        right: 'auto',
+                        bottom: 'auto',
+                        marginRight: '-50%',
+                        transform: 'translate(-50%, -50%)'
+                    }
+                }}>
                 <Tabs className="tabs" value={value} onChange={tabChangeHandler}>
                     <Tab label="Login" />
                     <Tab label="Register" />
@@ -263,8 +207,8 @@ const Header = ( props ) => {
                         </FormControl>
                         <br /><br />
                         <FormControl required>
-                            <InputLabel htmlFor="password">Password</InputLabel>
-                            <Input id="password" type="text" password={loginForm.password} onChange={loginInputChangedHandler} />
+                            <InputLabel htmlFor="loginpassword">Password</InputLabel>
+                            <Input id="loginpassword" type="text" loginpassword={loginForm.loginpassword} onChange={loginInputChangedHandler} />
                         </FormControl>
                         <br /><br />
                         {loggedIn === true &&
@@ -297,8 +241,8 @@ const Header = ( props ) => {
                         </FormControl>
                         <br /><br />
                         <FormControl required>
-                            <InputLabel htmlFor="password">Password</InputLabel>
-                            <Input id="password" type="text" password={registerForm.password} onChange={registerInputChangedHandler} />
+                            <InputLabel htmlFor="registerpassword">Password</InputLabel>
+                            <Input id="registerpassword" type="text" registerpassword={registerForm.registerpassword} onChange={registerInputChangedHandler} />
                         </FormControl>
                         <br /><br />
                         <FormControl required>
