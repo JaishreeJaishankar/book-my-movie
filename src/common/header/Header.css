@@ -22,3 +22,15 @@
     float: right;
     margin-left: 10px;
 }
+
+.requiredEmpty {
+    display: block;
+}
+
+.requiredChecked{
+    display: none;
+}
+
+.red {
+    color: red;
+}

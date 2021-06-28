@@ -16,7 +16,7 @@ import './Header.css';
 import logo from "../../assets/logo.svg"
 
 
-const TabContainer = function (props) {
+const TabContainer = function(props){
     return (
         <Typography component="div" style={{ padding: 0, textAlign: 'center' }}>
             {props.children}
@@ -44,6 +44,20 @@ const Header = (props) => {
         registerpassword:"",
         contact:""
     });
+    
+    const [requiredRegisterForm,setRequiredRegisterForm] = useState({
+        firstname:"",
+        lastname:"",
+        email:"",
+        registerpassword:"",
+        contact:""
+    });
+    
+    const [requiredLoginForm,setRequiredLoginForm] = useState({
+        username:"",
+        loginpassword:""
+    });
+    
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     const [loggedIn, setLoggedIn] = useState(sessionStorage.getItem("access-token")== null ? false : true);
    
@@ -57,6 +71,14 @@ const Header = (props) => {
                             email:"",
                             registerpassword:"",
                             contact:""
+                        })
+        setRequiredLoginForm({username:"requiredChecked",loginpassword:"requiredChecked"});
+        setRequiredRegisterForm({
+                            firstname:"requiredChecked",
+                            lastname:"requiredChecked",
+                            email:"requiredChecked",
+                            registerpassword:"requiredChecked",
+                            contact:"requiredChecked"
                         })  
     }
 
@@ -69,11 +91,25 @@ const Header = (props) => {
     }
 
     const  loginClickHandler = () => {
-        console.log(loginForm.username, loginForm.loginpassword);
-        if(loginForm.username === "" || loginForm.loginpassword === "") return;     
+
+        let emptyFieldCheck = false;
+        for (const key in loginForm) {
+            const state = requiredLoginForm;
+            if(loginForm[key]===""){
+                state[key] = "requiredEmpty";
+                emptyFieldCheck = true;
+            }
+            else
+                state[key] = "requiredChecked";
+            setRequiredLoginForm({...state})
+        }
+        
+        if(emptyFieldCheck){
+            setLoggedIn('empty');
+            return;
+        }
 
         let dataLogin = null;
-        console.log(props.baseUrl);
         fetch(props.baseUrl + "auth/login",{
             method: "POST",
             headers: {
@@ -98,6 +134,7 @@ const Header = (props) => {
             closeModalHandler();
 
         }).catch((error) => {
+            setLoggedIn("error");
             console.log(error);
         });
     };
@@ -110,13 +147,28 @@ const Header = (props) => {
 
     const registerInputChangedHandler = (e) => {
         const state = registerForm;
-        console.log(e.target.id);
         state[e.target.id] = e.target.value;
-        console.log(state);
         setRegisterForm({...state})
     }
     
     const  registerClickHandler = () => {
+        
+        let emptyFieldCheck = false;
+        for (const key in registerForm) {
+            const state = requiredRegisterForm;
+            if(registerForm[key]===""){
+                state[key] = "requiredEmpty";
+                emptyFieldCheck = true;
+            }
+            else
+                state[key] = "requiredChecked";
+            setRequiredRegisterForm({...state})
+        }
+        if(emptyFieldCheck){
+            setRegistrationSuccess("empty");
+            return;
+        }
+
         let dataRegistered = JSON.stringify({
             email_address: registerForm.email,
             first_name: registerForm.firstname,
@@ -147,32 +199,18 @@ const Header = (props) => {
             <header className="header">
                 <img src={logo} className="logo" alt="Logo" />
                 {!loggedIn ?
-                    <div className="headerButton">
-                        <Button variant="contained" color="default" onClick={openModalHandler}>
-                            Login
-                        </Button>
-                    </div>
+                    <div className="headerButton"><Button variant="contained" color="default" onClick={openModalHandler}>Login</Button></div>
                     :
-                    <div className="headerButton">
-                        <Button variant="contained" color="default" onClick={logoutHandler}>
-                            Logout
-                        </Button>
-                    </div>
+                    <div className="headerButton"><Button variant="contained" color="default" onClick={logoutHandler}>Logout</Button></div>
                 }
-                {props.showBookShowButton === "true" && !loggedIn
-                    ? <div className="bookshow-button headerButton">
-                        <Button variant="contained" color="primary" onClick={openModalHandler}>
-                            Book Show
-                        </Button>
-                    </div>
+                {props.showBookShowButton === "true" && !loggedIn ? 
+                    <div className="bookshow-button headerButton"><Button variant="contained" color="primary" onClick={openModalHandler}>Book Show</Button></div>
                     : ""
                 }
-                {props.showBookShowButton === "true" && loggedIn
-                    ? <div className="bookshow-button headerButton">
+                {props.showBookShowButton === "true" && loggedIn ? 
+                    <div className="bookshow-button headerButton">
                         <Link to={"/bookshow/" + props.id}>
-                            <Button variant="contained" color="primary">
-                                Book Show
-                            </Button>
+                            <Button variant="contained" color="primary">Book Show</Button>
                         </Link>
                     </div>
                     : ""
@@ -194,6 +232,7 @@ const Header = (props) => {
                         transform: 'translate(-50%, -50%)'
                     }
                 }}>
+                
                 <Tabs className="tabs" value={value} onChange={tabChangeHandler}>
                     <Tab label="Login" />
                     <Tab label="Register" />
@@ -204,58 +243,66 @@ const Header = (props) => {
                         <FormControl required>
                             <InputLabel htmlFor="username">Username</InputLabel>
                             <Input id="username" type="text" username={loginForm.username} onChange={loginInputChangedHandler} />
+                            <FormHelperText className={requiredLoginForm.username}><span className="red">required</span></FormHelperText>
                         </FormControl>
                         <br /><br />
                         <FormControl required>
                             <InputLabel htmlFor="loginpassword">Password</InputLabel>
-                            <Input id="loginpassword" type="text" loginpassword={loginForm.loginpassword} onChange={loginInputChangedHandler} />
+                            <Input id="loginpassword" type="password" loginpassword={loginForm.loginpassword} onChange={loginInputChangedHandler} />
+                            <FormHelperText className={requiredLoginForm.loginpassword}><span className="red">required</span></FormHelperText>
                         </FormControl>
                         <br /><br />
                         {loggedIn === true &&
-                            <FormControl>
-                                <span className="successText">
-                                    Login Successful!
-                                </span>
-                            </FormControl>
+                            <FormControl><span className="successText">Login Successful!</span></FormControl>
+                        }
+                        {/* {loggedIn === "empty" &&
+                            <FormControl><span className="successText">Insufficient Credentials!</span></FormControl>
+                        } */}
+                        {loggedIn === "error" &&
+                            <FormControl><span className="successText">Invalid Credentials!</span></FormControl>
                         }
                         <br /><br />
                         <Button variant="contained" color="primary" onClick={loginClickHandler}>LOGIN</Button>
                     </TabContainer>
                 }
-
                 {value === 1 &&
                     <TabContainer>
                         <FormControl required>
                             <InputLabel htmlFor="firstname">First Name</InputLabel>
                             <Input id="firstname" type="text" firstname={registerForm.firstname} onChange={registerInputChangedHandler} />
+                            <FormHelperText className={requiredRegisterForm.firstname}><span className="red">required</span></FormHelperText>
                         </FormControl>
                         <br /><br />
                         <FormControl required>
                             <InputLabel htmlFor="lastname">Last Name</InputLabel>
                             <Input id="lastname" type="text" lastname={registerForm.lastname} onChange={registerInputChangedHandler} />
+                            <FormHelperText className={requiredRegisterForm.lastname}><span className="red">required</span></FormHelperText>
                         </FormControl>
                         <br /><br />
                         <FormControl required>
                             <InputLabel htmlFor="email">Email</InputLabel>
                             <Input id="email" type="text" email={registerForm.email} onChange={registerInputChangedHandler} />
+                            <FormHelperText className={requiredRegisterForm.email}><span className="red">required</span></FormHelperText>
                         </FormControl>
                         <br /><br />
                         <FormControl required>
                             <InputLabel htmlFor="registerpassword">Password</InputLabel>
-                            <Input id="registerpassword" type="text" registerpassword={registerForm.registerpassword} onChange={registerInputChangedHandler} />
+                            <Input id="registerpassword" type="password" registerpassword={registerForm.registerpassword} onChange={registerInputChangedHandler} />
+                            <FormHelperText className={requiredRegisterForm.registerpassword}><span className="red">required</span>
+                            </FormHelperText>
                         </FormControl>
                         <br /><br />
                         <FormControl required>
                             <InputLabel htmlFor="contact">Contact No.</InputLabel>
                             <Input id="contact" type="text" contact={registerForm.contact} onChange={registerInputChangedHandler} />
+                            <FormHelperText className={requiredRegisterForm.contact}><span className="red">required</span></FormHelperText>
                         </FormControl>
                         <br /><br />
                         {registrationSuccess === true &&
-                            <FormControl>
-                                <span className="successText">
-                                    Registration Successful. Please Login!
-                                  </span>
-                            </FormControl>
+                            <FormControl><span className="successText">Registration Successful. Please Login!</span></FormControl>
+                        }
+                        {registrationSuccess === "empty" &&
+                            <FormControl><span className="successText">Registration Incomplete. Try Again!</span></FormControl>
                         }
                         <br /><br />
                         <Button variant="contained" color="primary" onClick={registerClickHandler}>REGISTER</Button>
@@ -264,7 +311,6 @@ const Header = (props) => {
             </Modal>
         </div>
     )
-
 }
 
 export default Header;
