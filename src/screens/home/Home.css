@@ -30,11 +30,13 @@
 }
 
 .left {
+    margin: 16px;
     width: 76%;
 }
 
 .right {
     padding-top: 20px;
+    margin: 16px;
     width: 24%;
 }
 
@@ -43,7 +45,7 @@
 }
 
 
-@media (max-width: 992px) {
+@media (max-width: 1500px) {
     .flex-container {
         flex-direction: column;
     }
@@ -51,7 +53,7 @@
         width: 100%;
     }
     .right {
-        width: 90%;
+        width: 100%;
     }
     .movie-released-grid-item {
         margin: 8px;
